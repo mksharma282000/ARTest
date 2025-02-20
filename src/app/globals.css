@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Keyframes for scanning effect */
+@keyframes scanner-top-left {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-5px, -5px); }
+}
+
+@keyframes scanner-top-right {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(5px, -5px); }
+}
+
+@keyframes scanner-bottom-left {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-5px, 5px); }
+}
+
+@keyframes scanner-bottom-right {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(5px, 5px); }
+}
+
+/* Animation classes */
+.animate-scanner-top-left {
+  animation: scanner-top-left 2s infinite ease-in-out;
+}
+
+.animate-scanner-top-right {
+  animation: scanner-top-right 2s infinite ease-in-out;
+}
+
+.animate-scanner-bottom-left {
+  animation: scanner-bottom-left 2s infinite ease-in-out;
+}
+
+.animate-scanner-bottom-right {
+  animation: scanner-bottom-right 2s infinite ease-in-out;
+}
+
