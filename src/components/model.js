@@ -1,6 +1,8 @@
 import "@google/model-viewer";
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+// import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 const Model = ({
   src,
@@ -17,6 +19,7 @@ const Model = ({
   const modelViewerRef = useRef(null);
   const [isARSupported, setIsARSupported] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const router = useRouter(); // Initialize useRouter
   useEffect(() => {
     setIsPageLoaded(true);
     const modelViewer = modelViewerRef.current;
@@ -42,6 +45,8 @@ const Model = ({
 
   return (
     <div className="relative flex flex-col items-center">
+      {/* Back Button */}
+
       {isPageLoaded ? (
         <>
           <model-viewer
@@ -70,6 +75,13 @@ const Model = ({
             <span className="text-white">
               {isARSupported ? "See in my World" : "See in my World"}
             </span>
+          </button>
+          <button
+            onClick={() => router.push("/")}
+            className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full shadow-lg hover:bg-gray-200 transition-all duration-300 z-10"
+          >
+            <ArrowLeft size={20} />
+            <span>Back</span>
           </button>
         </>
       ) : (
