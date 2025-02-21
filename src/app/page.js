@@ -223,20 +223,26 @@ export default function Home() {
       ctx.fillText(lines, canvas.width / 2, y);
 
       // Add animation for a "pop-out" effect
-      canvas.style.transition = "transform 4s ease-out";
-      canvas.style.transform = "scale(1.1)";
+      canvas.style.transition =
+        "transform 0.4s ease-out, opacity 0.4s ease-in-out";
+      canvas.style.transform = "scale(1.2)";
+      canvas.style.opacity = "0.2";
+
       setTimeout(() => {
-        canvas.style.transform = "scale(1)";
+        canvas.style.transform = "scale(1.3)";
+        canvas.style.opacity = "1";
       }, 300);
 
       // Center and display the canvas
       canvas.style.position = "absolute";
-      canvas.style.top = "30%";
-      canvas.style.left = "0%";
-      canvas.style.transform = "translate(-50%, -50%)"; // Fix for perfect centering
+      canvas.style.top = "50%";
+      canvas.style.left = "30%";
+      canvas.style.transform = "translate(0%, 0%)"; // Fix for perfect centering
       canvas.style.borderRadius = "20px";
-      canvas.style.boxShadow = "0 10px 20px rgba(0, 0, 0, 0.2)";
-      canvas.style.background = "#ffffff";
+      canvas.style.boxShadow = "0 15px 30px rgba(0, 0, 0, 0.3)";
+      canvas.style.background =
+        "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)";
+      canvas.style.padding = "10px";
       canvas.style.zIndex = 100;
     }
   };
