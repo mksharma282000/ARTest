@@ -19,6 +19,7 @@ export default function Home() {
   const [items, setItem] = useState([]);
   const [scannedText, setScannedText] = useState("");
   const [selected, setSelected] = useState("");
+  const [word, setWord] = useState(""); // Define word state globally
 
   const router = useRouter();
   const getModels = useCallback(async () => {
@@ -113,15 +114,17 @@ export default function Home() {
         if (!word) return;
         setScannedText(word); // Set the scanned text to the state
         setIsVisible(true);
+        setWord(word);
         console.log(word);
         console.log(items);
         word.split("\n").forEach((element) => {
           const x = element.toLowerCase();
-          const lowerCaseItems = items.map((item) => item.toLowerCase()); 
+          const lowerCaseItems = items.map((item) => item.toLowerCase());
           if (lowerCaseItems.includes(x)) {
             window.sessionStorage.setItem("word", x);
             setchange(true);
           }
+          return word;
         });
       } else {
         console.error("Error from API:", data.error.message);
@@ -130,6 +133,80 @@ export default function Home() {
       setIsVisible(false);
     }
   };
+  console.log(word);
+
+  const refineText = async (word) => {
+    const GEMINI_API_KEY = "AIzaSyCi0SpePLAR5gLiwen8lyQAAiOqpZPbl4E";
+
+    if (!GEMINI_API_KEY) {
+      console.error("Gemini API key is missing.");
+      return;
+    }
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const requestBody = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Refine this text: "${word}". 
+              1. Correct any spelling mistakes.
+              2. Merge Hindi words properly.
+              3. Identify if the word is related to an **object name, fruit, vegetable, or any real-world entity**.
+              4. If it's incorrect, suggest the closest correct Hindi word from these categories.
+              5. Ensure the final refined word is **meaningful and valid** in Hindi.
+              6. If it detects maths word, like 2+2 then give me the output as 2+2=4.
+
+              
+              Example Refinements:
+              - 'aaple' -> 'सेब' (Apple)
+              - 'baagan' -> 'बैंगन' (Eggplant)
+              - 'caaar' -> 'कार' (Car)
+  
+              Provide only the **final refined Hindi word** as the response.`,
+            },
+          ],
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API Response:", data);
+
+      if (data && data.candidates && data.candidates.length > 0) {
+        const refinedText = data.candidates[0].content.parts[0].text;
+        setScannedText(refinedText);
+        setWord(refinedText);
+        console.log("Refined Text:", refinedText);
+      } else {
+        console.error("Unexpected API response format:", data);
+      }
+    } catch (error) {
+      console.error("Error refining text:", error);
+    }
+  };
+
+  // Automatically refine scanned text after scanning
+  useEffect(() => {
+    if (scannedText) {
+      refineText(scannedText);
+    }
+  }, [scannedText]);
 
   const takePhoto = () => {
     console.log("clicked");
