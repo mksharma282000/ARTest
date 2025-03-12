@@ -80,7 +80,7 @@ export default function Home() {
   };
 
   const analyzeImage = async (base64Image) => {
-    console.log("entered url");
+    console.log("entered OCR processing...");
     const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_API_KEY;
     const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
 
@@ -88,11 +88,11 @@ export default function Home() {
       requests: [
         {
           image: {
-            content: base64Image, // Base64 image data
+            content: base64Image,
           },
           features: [
             {
-              type: "DOCUMENT_TEXT_DETECTION", // Feature type
+              type: "DOCUMENT_TEXT_DETECTION",
             },
           ],
         },
@@ -103,37 +103,54 @@ export default function Home() {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Ensure JSON content type
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody), // Send the request body
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
-      if (response.ok && items) {
-        const word = data.responses[0].fullTextAnnotation.text;
-        if (!word) return;
-        setScannedText(word); // Set the scanned text to the state
-        setIsVisible(true);
-        setWord(word);
-        console.log(word);
-        console.log(items);
-        word.split("\n").forEach((element) => {
+      if (
+        response.ok &&
+        data.responses &&
+        data.responses[0].fullTextAnnotation
+      ) {
+        let extractedWord = data.responses[0].fullTextAnnotation.text.trim();
+        if (!extractedWord) return;
+
+        console.log("Extracted OCR Word:", extractedWord);
+
+        // Call refineText to ensure spelling correction while maintaining language
+        const refinedWord = await refineText(extractedWord);
+        if (!refinedWord) return;
+
+        console.log("Refined Word:", refinedWord);
+        setScannedText(refinedWord);
+        setWord(refinedWord); // Update the state with the refined word
+
+        // Now match the **refined word** with items, NOT the raw OCR word
+        const lowerCaseItems = items.map((item) => item.toLowerCase());
+        let foundMatch = false;
+
+        refinedWord.split("\n").forEach((element) => {
           const x = element.toLowerCase();
-          const lowerCaseItems = items.map((item) => item.toLowerCase());
           if (lowerCaseItems.includes(x)) {
-            window.sessionStorage.setItem("word", x);
+            console.log("Matched Item:", x);
+            window.sessionStorage.setItem("word", x); // Store only the refined word
+            foundMatch = true;
             setchange(true);
           }
-          return word;
         });
+
+        if (!foundMatch) {
+          console.warn("No match found for refined word:", refinedWord);
+        }
       } else {
-        console.error("Error from API:", data.error.message);
+        console.error("Error from API:", data.error?.message);
       }
     } catch (error) {
-      setIsVisible(false);
+      console.error("Error processing image:", error);
     }
   };
-  console.log(word);
 
   const refineText = async (word) => {
     const GEMINI_API_KEY = "AIzaSyCi0SpePLAR5gLiwen8lyQAAiOqpZPbl4E";
@@ -152,18 +169,19 @@ export default function Home() {
           parts: [
             {
               text: `Refine this text: "${word}". 
-              1. Correct any spelling mistakes.
-              2. Merge Hindi or english words properly.
-              3. Identify if the word is related to an **object name, fruit, vegetable, or any real-world entity**.
-              4. If it's incorrect, suggest the closest correct Hindi or English word from these categories.
-              5. Ensure the final refined word is **meaningful and valid** in Hindi.            
-              
-              Example Refinements:
-              - 'aaple' -> 'सेब' (Apple)
-              - 'baagan' -> 'बैंगन' (Eggplant)
-              - 'caaar' -> 'कार' (Car)
+              1. **Keep the word in its original language** (English stays English, Hindi stays Hindi).
+              2. **Fix spelling mistakes** if present.
+              3. **Do not translate between Hindi and English**.
+              4. Return the refined word in **the same detected language**.
   
-              Provide only the **final refined English/Hindi word** as the response.`,
+              Example Outputs:
+              - Input: "aaple" -> Output: "apple"
+              - Input: "सेब" -> Output: "सेब"
+              - Input: "seb" -> Output: "सेब"
+              - Input: "mango" -> Output: "mango"
+              - Input: "मैंगो" -> Output: "मैंगो"
+              
+              Provide **only the refined word** as the response.`,
             },
           ],
         },
@@ -187,15 +205,15 @@ export default function Home() {
       console.log("Raw API Response:", data);
 
       if (data && data.candidates && data.candidates.length > 0) {
-        const refinedText = data.candidates[0].content.parts[0].text;
-        setScannedText(refinedText);
-        setWord(refinedText);
-        console.log("Refined Text:", refinedText);
+        const refinedText = data.candidates[0].content.parts[0].text.trim();
+        return refinedText;
       } else {
         console.error("Unexpected API response format:", data);
+        return word; // Fallback: Return original word if API fails
       }
     } catch (error) {
       console.error("Error refining text:", error);
+      return word; // Fallback
     }
   };
 
@@ -405,23 +423,6 @@ export default function Home() {
       }
     })();
   }, [getModels]);
-
-  // useEffect(() => {
-  //   fetch("/data.json")
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-  //       return response.json();
-  //     })
-  //     .then((data) => {
-  //       console.log("Data fetched:", data);
-  //       setItem(data.words || []);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching data:", error);
-  //     });
-  // }, []);
 
   useEffect(() => {
     if (scannedText) {
