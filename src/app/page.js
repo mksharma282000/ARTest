@@ -153,19 +153,17 @@ export default function Home() {
             {
               text: `Refine this text: "${word}". 
               1. Correct any spelling mistakes.
-              2. Merge Hindi words properly.
+              2. Merge Hindi or english words properly.
               3. Identify if the word is related to an **object name, fruit, vegetable, or any real-world entity**.
-              4. If it's incorrect, suggest the closest correct Hindi word from these categories.
-              5. Ensure the final refined word is **meaningful and valid** in Hindi.
-              6. If it detects maths word, like 2+2 then give me the output as 2+2=4.
-
+              4. If it's incorrect, suggest the closest correct Hindi or English word from these categories.
+              5. Ensure the final refined word is **meaningful and valid** in Hindi.            
               
               Example Refinements:
               - 'aaple' -> 'सेब' (Apple)
               - 'baagan' -> 'बैंगन' (Eggplant)
               - 'caaar' -> 'कार' (Car)
   
-              Provide only the **final refined Hindi word** as the response.`,
+              Provide only the **final refined English/Hindi word** as the response.`,
             },
           ],
         },
