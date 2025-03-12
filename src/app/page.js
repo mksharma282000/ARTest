@@ -80,77 +80,74 @@ export default function Home() {
   };
 
   const analyzeImage = async (base64Image) => {
-    console.log("entered OCR processing...");
-    const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-    const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
+  console.log("entered OCR processing...");
+  const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+  const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
 
-    const requestBody = {
-      requests: [
-        {
-          image: {
-            content: base64Image,
+  const requestBody = {
+    requests: [
+      {
+        image: {
+          content: base64Image, 
+        },
+        features: [
+          {
+            type: "DOCUMENT_TEXT_DETECTION",
           },
-          features: [
-            {
-              type: "DOCUMENT_TEXT_DETECTION",
-            },
-          ],
-        },
-      ],
-    };
+        ],
+      },
+    ],
+  };
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    if (response.ok && data.responses && data.responses[0].fullTextAnnotation) {
+      let extractedWord = data.responses[0].fullTextAnnotation.text.trim();
+      if (!extractedWord) return;
+
+      console.log("Extracted OCR Word:", extractedWord);
+
+      // Call refineText to ensure spelling correction while maintaining language
+      const refinedWord = await refineText(extractedWord);
+      if (!refinedWord) return;
+
+      console.log("Refined Word:", refinedWord);
+      setScannedText(refinedWord);
+      setWord(refinedWord); // Update the state with the refined word
+
+      // Now match the **refined word** with items, NOT the raw OCR word
+      const lowerCaseItems = items.map((item) => item.toLowerCase());
+      let foundMatch = false;
+
+      refinedWord.split("\n").forEach((element) => {
+        const x = element.toLowerCase();
+        if (lowerCaseItems.includes(x)) {
+          console.log("Matched Item:", x);
+          window.sessionStorage.setItem("word", x); // Store only the refined word
+          foundMatch = true;
+          setchange(true);
+        }
       });
 
-      const data = await response.json();
-      if (
-        response.ok &&
-        data.responses &&
-        data.responses[0].fullTextAnnotation
-      ) {
-        let extractedWord = data.responses[0].fullTextAnnotation.text.trim();
-        if (!extractedWord) return;
-
-        console.log("Extracted OCR Word:", extractedWord);
-
-        // Call refineText to ensure spelling correction while maintaining language
-        const refinedWord = await refineText(extractedWord);
-        if (!refinedWord) return;
-
-        console.log("Refined Word:", refinedWord);
-        setScannedText(refinedWord);
-        setWord(refinedWord); // Update the state with the refined word
-
-        // Now match the **refined word** with items, NOT the raw OCR word
-        const lowerCaseItems = items.map((item) => item.toLowerCase());
-        let foundMatch = false;
-
-        refinedWord.split("\n").forEach((element) => {
-          const x = element.toLowerCase();
-          if (lowerCaseItems.includes(x)) {
-            console.log("Matched Item:", x);
-            window.sessionStorage.setItem("word", x); // Store only the refined word
-            foundMatch = true;
-            setchange(true);
-          }
-        });
-
-        if (!foundMatch) {
-          console.warn("No match found for refined word:", refinedWord);
-        }
-      } else {
-        console.error("Error from API:", data.error?.message);
+      if (!foundMatch) {
+        console.warn("No match found for refined word:", refinedWord);
       }
-    } catch (error) {
-      console.error("Error processing image:", error);
+    } else {
+      console.error("Error from API:", data.error?.message);
     }
-  };
+  } catch (error) {
+    console.error("Error processing image:", error);
+  }
+};
+
 
   const refineText = async (word) => {
     const GEMINI_API_KEY = "AIzaSyCi0SpePLAR5gLiwen8lyQAAiOqpZPbl4E";
