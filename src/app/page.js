@@ -80,74 +80,77 @@ export default function Home() {
   };
 
   const analyzeImage = async (base64Image) => {
-  console.log("entered OCR processing...");
-  const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-  const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
+    console.log("entered OCR processing...");
+    const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+    const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
 
-  const requestBody = {
-    requests: [
-      {
-        image: {
-          content: base64Image, 
-        },
-        features: [
-          {
-            type: "DOCUMENT_TEXT_DETECTION",
+    const requestBody = {
+      requests: [
+        {
+          image: {
+            content: base64Image,
           },
-        ],
-      },
-    ],
-  };
+          features: [
+            {
+              type: "DOCUMENT_TEXT_DETECTION",
+            },
+          ],
+        },
+      ],
+    };
 
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const data = await response.json();
-    if (response.ok && data.responses && data.responses[0].fullTextAnnotation) {
-      let extractedWord = data.responses[0].fullTextAnnotation.text.trim();
-      if (!extractedWord) return;
-
-      console.log("Extracted OCR Word:", extractedWord);
-
-      // Call refineText to ensure spelling correction while maintaining language
-      const refinedWord = await refineText(extractedWord);
-      if (!refinedWord) return;
-
-      console.log("Refined Word:", refinedWord);
-      setScannedText(refinedWord);
-      setWord(refinedWord); // Update the state with the refined word
-
-      // Now match the **refined word** with items, NOT the raw OCR word
-      const lowerCaseItems = items.map((item) => item.toLowerCase());
-      let foundMatch = false;
-
-      refinedWord.split("\n").forEach((element) => {
-        const x = element.toLowerCase();
-        if (lowerCaseItems.includes(x)) {
-          console.log("Matched Item:", x);
-          window.sessionStorage.setItem("word", x); // Store only the refined word
-          foundMatch = true;
-          setchange(true);
-        }
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
 
-      if (!foundMatch) {
-        console.warn("No match found for refined word:", refinedWord);
-      }
-    } else {
-      console.error("Error from API:", data.error?.message);
-    }
-  } catch (error) {
-    console.error("Error processing image:", error);
-  }
-};
+      const data = await response.json();
+      if (
+        response.ok &&
+        data.responses &&
+        data.responses[0].fullTextAnnotation
+      ) {
+        let extractedWord = data.responses[0].fullTextAnnotation.text.trim();
+        if (!extractedWord) return;
 
+        console.log("Extracted OCR Word:", extractedWord);
+
+        // Call refineText to ensure spelling correction while maintaining language
+        const refinedWord = await refineText(extractedWord);
+        if (!refinedWord) return;
+
+        console.log("Refined Word:", refinedWord);
+        setScannedText(refinedWord);
+        setWord(refinedWord); // Update the state with the refined word
+
+        // Now match the **refined word** with items, NOT the raw OCR word
+        const lowerCaseItems = items.map((item) => item.toLowerCase());
+        let foundMatch = false;
+
+        refinedWord.split("\n").forEach((element) => {
+          const x = element.toLowerCase();
+          if (lowerCaseItems.includes(x)) {
+            console.log("Matched Item:", x);
+            window.sessionStorage.setItem("word", x); // Store only the refined word
+            foundMatch = true;
+            setchange(true);
+          }
+        });
+
+        if (!foundMatch) {
+          console.warn("No match found for refined word:", refinedWord);
+        }
+      } else {
+        console.error("Error from API:", data.error?.message);
+      }
+    } catch (error) {
+      console.error("Error processing image:", error);
+    }
+  };
 
   const refineText = async (word) => {
     const GEMINI_API_KEY = "AIzaSyCi0SpePLAR5gLiwen8lyQAAiOqpZPbl4E";
@@ -451,40 +454,40 @@ export default function Home() {
     <div className="relative flex justify-center items-center h-screen w-screen bg-gray-600 overflow-hidden">
       {/* Video Stream */}
       <video
-        className="absolute w-full h-full object-cover"
+        className="absolute flex w-full h-full object-cover"
         ref={videoRef}
         autoPlay
         playsInline
         muted
       />
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-xl z-10"></div>
+      <div className="absolute inset-0 bg-black/50 bg-opacity-40 backdrop-blur-xl flex z-10"></div>
       {/* Photo Canvas */}
       <canvas
-        className={`absolute z-30 transition-opacity duration-300 ${
-          isVisible ? "opacity-100" : "opacity-0"
+        className={`flex absolute z-0 transition-opacity duration-300 ${
+          isVisible ? "opacity-0" : "opacity-0"
         }  top-12 w-auto max-w-full max-h-full bg-black`}
         ref={photoRef}
       ></canvas>
       {/* Cropping Canvas and Frame */}
       <div className="relative z-40 flex flex-col items-center">
         {/* Wrapper for the canvas */}
-        <div className="relative">
+        <div className="relative flex">
           {/* Cropping Canvas */}
           <canvas
-            className="shadow-lg rounded-3xl max-w-[90vw] max-h-[90vh] mx-auto"
+            className="shadow-lg flex rounded-3xl w-full h-full max-w-[90%] max-h-[90vh] mx-auto sm:w-[100%] sm:h-[80vh] md:w-[100%] md:h-[70vh] lg:w-[100%] lg:h-[90vh]"
             ref={cropRef}
           ></canvas>
 
           {/* Corner Borders - Positioned Outside the Canvas */}
-          <div className="absolute top-[-12px] left-[-12px] w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl animate-scanner-top-left"></div>
-          <div className="absolute top-[-12px] right-[-12px] w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl animate-scanner-top-right"></div>
-          <div className="absolute bottom-[-12px] left-[-12px] w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl animate-scanner-bottom-left"></div>
-          <div className="absolute bottom-[-12px] right-[-12px] w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-3xl animate-scanner-bottom-right"></div>
+          <div className="absolute top-[-15px] left-[px] w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl animate-scanner-top-left"></div>
+          <div className="absolute top-[-15px] right-[-0px] w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl animate-scanner-top-right"></div>
+          <div className="absolute bottom-[-15px] left-[-px] w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl animate-scanner-bottom-left"></div>
+          <div className="absolute bottom-[-15px] right-[-1px] w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-3xl animate-scanner-bottom-right"></div>
         </div>
       </div>
       ;{/* Button Section */}
-      <div className="absolute bottom-[20%] md:bottom-20 z-50 w-full flex justify-center">
+      <div className="absolute bottom-[15%] md:bottom-20 z-50 w-full flex justify-center">
         <button
           className="flex items-center gap-3 bg-blue-600 text-white font-bold rounded-full px-5 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 shadow-lg hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
           onClick={takePhoto}
