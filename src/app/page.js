@@ -169,19 +169,21 @@ export default function Home() {
           parts: [
             {
               text: `Refine this text: "${word}". 
-              1. **Keep the word in its original language** (English stays English, Hindi stays Hindi).
-              2. **Fix spelling mistakes** if present.
-              3. **Do not translate between Hindi and English**.
-              4. Return the refined word in **the same detected language**.
-  
-              Example Outputs:
-              - Input: "aaple" -> Output: "apple"
-              - Input: "सेब" -> Output: "सेब"
-              - Input: "seb" -> Output: "सेब"
-              - Input: "mango" -> Output: "mango"
-              - Input: "मैंगो" -> Output: "मैंगो"
-              
-              Provide **only the refined word** as the response.`,
+                1. **Keep the word in its original language** (English stays English, Hindi stays Hindi).
+                2. **Fix spelling mistakes** if present.
+                3. **Do not translate between Hindi and English**.
+                4. **If the word is a common phonetic transliteration, correct it to the native script** (e.g., "seb" -> "सेब").
+                5. Return the refined word in **the same detected language**.
+
+                Example Outputs:
+                  - Input: "aaple" -> Output: "apple"
+                  - Input: "सेब" -> Output: "सेब"
+                  - Input: "seb" -> Output: "सेब"
+                  - Input: "mango" -> Output: "mango"
+                  - Input: "मैंगो" -> Output: "मैंगो"
+                  - Input: "SEB" -> Output: "सेब"
+
+                Provide **only the refined word** as the response.`,
             },
           ],
         },
