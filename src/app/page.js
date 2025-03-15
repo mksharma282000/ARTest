@@ -19,6 +19,7 @@ export default function Home() {
   const [items, setItem] = useState([]);
   const [scannedText, setScannedText] = useState("");
   const [selected, setSelected] = useState("");
+  const [word, setWord] = useState(""); // Define word state globally
 
   const router = useRouter();
   const getModels = useCallback(async () => {
@@ -79,7 +80,7 @@ export default function Home() {
   };
 
   const analyzeImage = async (base64Image) => {
-    console.log("entered url");
+    console.log("entered OCR processing...");
     const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_API_KEY;
     const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
 
@@ -87,11 +88,11 @@ export default function Home() {
       requests: [
         {
           image: {
-            content: base64Image, // Base64 image data
+            content: base64Image,
           },
           features: [
             {
-              type: "DOCUMENT_TEXT_DETECTION", // Feature type
+              type: "DOCUMENT_TEXT_DETECTION",
             },
           ],
         },
@@ -102,34 +103,129 @@ export default function Home() {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Ensure JSON content type
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody), // Send the request body
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
-      if (response.ok && items) {
-        const word = data.responses[0].fullTextAnnotation.text;
-        if (!word) return;
-        setScannedText(word); // Set the scanned text to the state
-        setIsVisible(true);
-        console.log(word);
-        console.log(items);
-        word.split("\n").forEach((element) => {
+      if (
+        response.ok &&
+        data.responses &&
+        data.responses[0].fullTextAnnotation
+      ) {
+        let extractedWord = data.responses[0].fullTextAnnotation.text.trim();
+        if (!extractedWord) return;
+
+        console.log("Extracted OCR Word:", extractedWord);
+
+        // Call refineText to ensure spelling correction while maintaining language
+        const refinedWord = await refineText(extractedWord);
+        if (!refinedWord) return;
+
+        console.log("Refined Word:", refinedWord);
+        setScannedText(refinedWord);
+        setWord(refinedWord); // Update the state with the refined word
+
+        // Now match the **refined word** with items, NOT the raw OCR word
+        const lowerCaseItems = items.map((item) => item.toLowerCase());
+        let foundMatch = false;
+
+        refinedWord.split("\n").forEach((element) => {
           const x = element.toLowerCase();
-          const lowerCaseItems = items.map((item) => item.toLowerCase()); 
           if (lowerCaseItems.includes(x)) {
-            window.sessionStorage.setItem("word", x);
+            console.log("Matched Item:", x);
+            window.sessionStorage.setItem("word", x); // Store only the refined word
+            foundMatch = true;
             setchange(true);
           }
         });
+
+        if (!foundMatch) {
+          console.warn("No match found for refined word:", refinedWord);
+        }
       } else {
-        console.error("Error from API:", data.error.message);
+        console.error("Error from API:", data.error?.message);
       }
     } catch (error) {
-      setIsVisible(false);
+      console.error("Error processing image:", error);
     }
   };
+
+  const refineText = async (word) => {
+    // const GEMINI_API_KEY = "AIzaSyCi0SpePLAR5gLiwen8lyQAAiOqpZPbl4E";
+    const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+      console.error("Gemini API key is missing.");
+      return;
+    }
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const requestBody = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Refine this text: "${word}". 
+                1. **Keep the word in its original language** (English stays English, Hindi stays Hindi).
+                2. **Fix spelling mistakes** if present.
+                3. **Do not translate between Hindi and English**.
+                4. **If the word is a common phonetic transliteration, correct it to the native script** (e.g., "seb" -> "सेब").
+                5. Return the refined word in **the same detected language**.
+
+                Example Outputs:
+                  - Input: "aaple" -> Output: "apple"
+                  - Input: "सेब" -> Output: "सेब"
+                  - Input: "seb" -> Output: "सेब"
+                  - Input: "mango" -> Output: "mango"
+                  - Input: "मैंगो" -> Output: "मैंगो"
+                  - Input: "SEB" -> Output: "सेब"
+
+                Provide **only the refined word** as the response.`,
+            },
+          ],
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API Response:", data);
+
+      if (data && data.candidates && data.candidates.length > 0) {
+        const refinedText = data.candidates[0].content.parts[0].text.trim();
+        return refinedText;
+      } else {
+        console.error("Unexpected API response format:", data);
+        return word; // Fallback: Return original word if API fails
+      }
+    } catch (error) {
+      console.error("Error refining text:", error);
+      return word; // Fallback
+    }
+  };
+
+  // Automatically refine scanned text after scanning
+  useEffect(() => {
+    if (scannedText) {
+      refineText(scannedText);
+    }
+  }, [scannedText]);
 
   const takePhoto = () => {
     console.log("clicked");
@@ -331,23 +427,6 @@ export default function Home() {
     })();
   }, [getModels]);
 
-  // useEffect(() => {
-  //   fetch("/data.json")
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-  //       return response.json();
-  //     })
-  //     .then((data) => {
-  //       console.log("Data fetched:", data);
-  //       setItem(data.words || []);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching data:", error);
-  //     });
-  // }, []);
-
   useEffect(() => {
     if (scannedText) {
       drawScannedTextToCanvas(); // Draw the text to the canvas when available
@@ -378,40 +457,40 @@ export default function Home() {
     <div className="relative flex justify-center items-center h-screen w-screen bg-gray-600 overflow-hidden">
       {/* Video Stream */}
       <video
-        className="absolute w-full h-full object-cover"
+        className="absolute flex w-full h-full object-cover"
         ref={videoRef}
         autoPlay
         playsInline
         muted
       />
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-xl z-10"></div>
+      <div className="absolute inset-0 bg-black/50 bg-opacity-40 backdrop-blur-xl flex z-10"></div>
       {/* Photo Canvas */}
       <canvas
-        className={`absolute z-30 transition-opacity duration-300 ${
-          isVisible ? "opacity-100" : "opacity-0"
+        className={`flex absolute z-0 transition-opacity duration-300 ${
+          isVisible ? "opacity-0" : "opacity-0"
         }  top-12 w-auto max-w-full max-h-full bg-black`}
         ref={photoRef}
       ></canvas>
       {/* Cropping Canvas and Frame */}
       <div className="relative z-40 flex flex-col items-center">
         {/* Wrapper for the canvas */}
-        <div className="relative">
+        <div className="relative flex">
           {/* Cropping Canvas */}
           <canvas
-            className="shadow-lg rounded-3xl max-w-[90vw] max-h-[90vh] mx-auto"
+            className="shadow-lg flex rounded-3xl w-full h-full max-w-[90%] max-h-[90vh] mx-auto sm:w-[100%] sm:h-[80vh] md:w-[100%] md:h-[70vh] lg:w-[100%] lg:h-[90vh]"
             ref={cropRef}
           ></canvas>
 
           {/* Corner Borders - Positioned Outside the Canvas */}
-          <div className="absolute top-[-12px] left-[-12px] w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl animate-scanner-top-left"></div>
-          <div className="absolute top-[-12px] right-[-12px] w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl animate-scanner-top-right"></div>
-          <div className="absolute bottom-[-12px] left-[-12px] w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl animate-scanner-bottom-left"></div>
-          <div className="absolute bottom-[-12px] right-[-12px] w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-3xl animate-scanner-bottom-right"></div>
+          <div className="absolute top-[-15px] left-[px] w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl animate-scanner-top-left"></div>
+          <div className="absolute top-[-15px] right-[-0px] w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl animate-scanner-top-right"></div>
+          <div className="absolute bottom-[-15px] left-[-px] w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl animate-scanner-bottom-left"></div>
+          <div className="absolute bottom-[-15px] right-[-1px] w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-3xl animate-scanner-bottom-right"></div>
         </div>
       </div>
       ;{/* Button Section */}
-      <div className="absolute bottom-[20%] md:bottom-20 z-50 w-full flex justify-center">
+      <div className="absolute bottom-[15%] md:bottom-20 z-50 w-full flex justify-center">
         <button
           className="flex items-center gap-3 bg-blue-600 text-white font-bold rounded-full px-5 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 shadow-lg hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
           onClick={takePhoto}
