@@ -1,4 +1,5 @@
-"use client";
+"use client"; // <-- Add this at the top
+
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -8,6 +9,7 @@ const Model = dynamic(() => import("../../components/model"), { ssr: false });
 export default function Home() {
   const [source, setSource] = useState("");
   const [iosSource, setIosSource] = useState("");
+  const [audioSource, setAudioSource] = useState(""); // New state for audio
   const [modellist, setModellist] = useState([]);
   const [finalObject, setFinalObject] = useState({});
   const [isload, loadModel] = useState(false);
@@ -22,7 +24,7 @@ export default function Home() {
         throw new Error(`Failed to complete upload: ${response.statusText}`);
       }
       return response.json();
-    } catch (error) {
+    } catch (error) {e
       console.error("Error in getModels:", error);
       throw error;
     }
@@ -80,9 +82,17 @@ export default function Home() {
         }
         loadModel(true);
       });
+      finalObject.file_name.audio.forEach(async (files) => {
+        if (files.endsWith(".mp3")) {
+          const audio = await downloadFile(finalObject.object_name, files);
+          setAudioSource(audio);
+          console.log(audio);
+        }
+      });
     };
     processFiles();
   }, [finalObject]);
+  console.log(finalObject);
 
   return (
     <div className="relative flex flex-col justify-center items-center h-screen overflow-hidden bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500">
@@ -90,7 +100,7 @@ export default function Home() {
         <Model
           iosSrc={iosSource}
           src={source}
-          // poster="https://cdn.glitch.com/36cb8393-65c6-408d-a538-055ada20431b%2Fposter-astronaut.png?v=1599079951717"
+          audioSrc={audioSource} // Pass audio URL to Model.js
           alt="A 3D model of an astronaut"
           shadowIntensity={1.5}
           autoRotate={true}
@@ -99,14 +109,11 @@ export default function Home() {
         />
       ) : (
         <div className="flex flex-col items-center">
-          {/* Animated Loading Spinner */}
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: 20 }}
             className="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin"
           />
-
-          {/* Typing Effect Message */}
           <motion.p
             animate={{ opacity: [0, 1, 0] }}
             transition={{ repeat: Infinity, duration: 10 }}
@@ -116,7 +123,9 @@ export default function Home() {
           </motion.p>
         </div>
       )}
-      <p className={isload ? "hidden" : "block text-white text-xl mt-4"}>{word}</p>
+      <p className={isload ? "hidden" : "block text-white text-xl mt-4"}>
+        {word}
+      </p>
     </div>
   );
 }
