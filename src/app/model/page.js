@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import background from "../background.png";
 
 const Model = dynamic(() => import("../../components/model"), { ssr: false });
 
@@ -24,7 +25,8 @@ export default function Home() {
         throw new Error(`Failed to complete upload: ${response.statusText}`);
       }
       return response.json();
-    } catch (error) {e
+    } catch (error) {
+      e;
       console.error("Error in getModels:", error);
       throw error;
     }
@@ -95,7 +97,10 @@ export default function Home() {
   console.log(finalObject);
 
   return (
-    <div className="relative flex flex-col justify-center items-center h-screen overflow-hidden bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500">
+    <div
+      className="relative flex flex-col justify-center items-center h-screen overflow-hidden bg-cover bg-center"
+      style={{ backgroundImage: `url(${background.src})` }}
+    >
       {isload ? (
         <Model
           iosSrc={iosSource}

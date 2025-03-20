@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LuScanLine } from "react-icons/lu";
+import Image from "next/image";
+import crystalball from "../app/crystalball.svg";
 
 export default function Home() {
   const videoRef = useRef(null);
@@ -464,7 +466,8 @@ export default function Home() {
         muted
       />
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50 bg-opacity-40 backdrop-blur-xl flex z-10"></div>
+      <div className="absolute inset-0 bg-black/10 bg-opacity-40 backdrop-blur-xl flex z-10"></div>
+
       {/* Photo Canvas */}
       <canvas
         className={`flex absolute z-0 transition-opacity duration-300 ${
@@ -472,13 +475,26 @@ export default function Home() {
         }  top-12 w-auto max-w-full max-h-full bg-black`}
         ref={photoRef}
       ></canvas>
+
+      <div className="self-stretch shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)]  w-4/5 px-4 py-3 top-10 absolute z-10 bg-white p-4 rounded-2xl gap-4 outline outline-1 outline-offset-[-1px]  inline-flex justify-start items-center  overflow-hidden">
+        <Image src={crystalball} alt="crystalball"></Image>
+        <div className="flex flex-col">
+          <p className="self-stretch justify-start text-Text-Body text-base font-semibold font-['Poppins'] leading-normal">
+            Ready to Scan?
+          </p>
+          <p className="self-stretch justify-start text-Text-Body text-base font-normal font-['Poppins'] leading-normal">
+            Point your camera, tap "Scan" and see the magic!
+          </p>
+        </div>
+      </div>
+
       {/* Cropping Canvas and Frame */}
-      <div className="relative z-40 flex flex-col items-center">
+      <div className="absolute z-40 flex flex-col items-center">
         {/* Wrapper for the canvas */}
         <div className="relative flex">
           {/* Cropping Canvas */}
           <canvas
-            className="shadow-lg flex rounded-3xl w-full h-full max-w-[90%] max-h-[90vh] mx-auto sm:w-[100%] sm:h-[80vh] md:w-[100%] md:h-[70vh] lg:w-[100%] lg:h-[90vh]"
+            className="shadow-lg flex rounded-3xl w-full h-full max-w-[90%] max-h-[90vh] mx-auto sm:w-[100%] sm:h-[80vh] md:w-[100%] md:h-[60vh] lg:w-[100%] lg:h-[50vh]"
             ref={cropRef}
           ></canvas>
 
@@ -489,14 +505,15 @@ export default function Home() {
           <div className="absolute bottom-[-15px] right-[-1px] w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-3xl animate-scanner-bottom-right"></div>
         </div>
       </div>
-      ;{/* Button Section */}
+
+      {/* Button Section */}
       <div className="absolute bottom-[15%] md:bottom-20 z-50 w-full flex justify-center">
         <button
           className="flex items-center gap-3 bg-blue-600 text-white font-bold rounded-full px-5 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 shadow-lg hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
           onClick={takePhoto}
         >
           <LuScanLine className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8" />
-          <span className="text-base md:text-lg lg:text-xl">Click to Scan</span>
+          <span className="text-base md:text-lg lg:text-xl">Scan</span>
         </button>
       </div>
     </div>

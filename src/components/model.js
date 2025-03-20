@@ -1,12 +1,12 @@
 import "@google/model-viewer";
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Music, Pause } from "lucide-react";
+import { ArrowLeft, Heading1, Music, Pause } from "lucide-react";
 
 const instructions = [
   "Welcome to the 3D Model Viewer! Click 'Next' to continue.",
   "You can rotate and zoom in on the 3D model using touch gestures.",
-  "Click 'See in my World' to activate AR mode and view it in your space."
+  "Click 'See in my World' to activate AR mode and view it in your space.",
 ];
 
 const Model = ({
@@ -47,7 +47,8 @@ const Model = ({
 
   const playAudio = () => {
     if (audioRef.current) {
-      audioRef.current.play()
+      audioRef.current
+        .play()
         .then(() => setIsAudioPlaying(true))
         .catch((err) => console.error("Audio play failed:", err));
     }
@@ -74,6 +75,8 @@ const Model = ({
 
   return (
     <div className="relative flex flex-col items-center">
+      <div className="bg-white w-4/5 absolute text-black top-[10%]"></div>
+
       {isPageLoaded ? (
         <>
           <model-viewer
@@ -89,77 +92,85 @@ const Model = ({
             className={className}
             {...props}
           ></model-viewer>
-          <button
-            className="custom-ar-button bg-blue-500 px-4 py-2 rounded-xl absolute bottom-[20%] flex items-center space-x-2 shadow-md hover:bg-blue-700 focus:outline-none"
-            onClick={activateAR}
-          >
-            <img
-              src="./myplace.png"
-              alt="AR Icon"
-              className="w-8 h-8 filter invert"
-            />
-            <span className="text-white">
-              {isARSupported ? "See in my World" : "See in my World"}
-            </span>
-          </button>
-          {/* Play / Pause Audio Button */}
-          <button
-            onClick={isAudioPlaying ? stopAudio : playAudio}
-            className="absolute bottom-10 right-4 p-3 bg-white text-black rounded-full shadow-lg hover:bg-gray-200 transition-all"
-          >
-            {isAudioPlaying ? <Pause size={24} /> : <Music size={24} />}
-          </button>
-          <button
-            onClick={() => router.push("/")}
-            className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full shadow-lg hover:bg-gray-200"
-          >
-            <ArrowLeft size={20} />
-            <span>Back</span>
-          </button>
-          {/* App Tour Button */}
-          <button
-            onClick={() => {
-              setIsTourVisible(true);
-              setTourStep(0);
-            }}
-            className="absolute bottom-20 left-4 px-4 py-2 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-700"
-          >
-            App Tour
-          </button>
-          {/* App Tour Popup */}
-          {isTourVisible && (
-            <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm text-center">
-                <p className="mb-4">{instructions[tourStep]}</p>
-                <div className="flex justify-between">
-                  <button
+
+          <div className="absolute p-2 items-center rounded-2xl justify-between top-5 text-gray-500 w-[90%] flex bg-white border-2 px-4">
+            <button
+              onClick={() => router.push("/")}
+              className="relative text-xl flex items-center hover:bg-gray-200"
+            >
+              <span>X</span>
+            </button>
+
+            <p className="text-black font-semibold">NAME</p>
+
+            {/* App Tour Button */}
+            <button
+              onClick={() => {
+                setIsTourVisible(true);
+                setTourStep(0);
+              }}
+              className="relative px-2 bg-white rounded-full border-2 border-gray-500 shadow-lg hover:bg-green-700"
+            >
+              ?
+            </button>
+            {/* App Tour Popup */}
+            {isTourVisible && (
+              <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm text-center">
+                  <p className="mb-4">{instructions[tourStep]}</p>
+                  <div className="flex justify-center">
+                    {/* <button
                     onClick={() => setIsTourVisible(false)}
                     className="px-4 py-2 bg-red-500 text-white rounded-lg"
                   >
                     Skip
-                  </button>
-                  {tourStep < instructions.length - 1 ? (
-                    <button
-                      onClick={() => setTourStep(tourStep + 1)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-                    >
-                      Next
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setIsTourVisible(false);
-                        setTourStep(0);
-                      }}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-                    >
-                      Done
-                    </button>
-                  )}
+                  </button> */}
+                    {tourStep < instructions.length - 1 ? (
+                      <button
+                        onClick={() => setTourStep(tourStep + 1)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                      >
+                        Next
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsTourVisible(false);
+                          setTourStep(0);
+                        }}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                      >
+                        Done
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          {/* Play / Pause Audio Button */}
+          <button
+            onClick={isAudioPlaying ? stopAudio : playAudio}
+            className="absolute bottom-[15%] right-4 p-3 bg-white text-black rounded-full shadow-lg hover:bg-gray-200 transition-all"
+          >
+            {isAudioPlaying ? <Pause size={24} /> : <Music size={24} />}
+          </button>
+
+          <div className="absolute bottom-[5%] w-full m-auto items-center justify-center flex">
+            <button
+              className="self-stretch min-w-16 px-2 py-2 bg-Background-Button-Primary-Default rounded-full outline outline-1 outline-offset-[-1px] outline-Stroke-White inline-flex justify-center items-center gap-4 overflow-hidden custom-ar-button bg-blue-500 relative space-x-2 shadow-md hover:bg-blue-700 focus:outline-none w-[90%]"
+              onClick={activateAR}
+            >
+              <img
+                src="./myplace.png"
+                alt="AR Icon"
+                className="w-8 h-8 filter invert"
+              />
+              <span className="text-white">
+                {isARSupported ? "SEE IN YOUR ROOM" : "SEE IN YOUR ROOM"}
+              </span>
+            </button>
+          </div>
         </>
       ) : (
         <p>Loading, please wait...</p>
