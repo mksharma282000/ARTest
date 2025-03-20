@@ -1,12 +1,12 @@
 import "@google/model-viewer";
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Heading1, Music, Pause } from "lucide-react";
+import { Music, Pause } from "lucide-react";
 
 const instructions = [
-  "Welcome to the 3D Model Viewer! Click 'Next' to continue.",
-  "You can rotate and zoom in on the 3D model using touch gestures.",
-  "Click 'See in my World' to activate AR mode and view it in your space.",
+  "Use your finger to rotate the model ",
+  "Pinch to zoom in and out",
+  "Press and drag to move the model ",
 ];
 
 const Model = ({
@@ -102,6 +102,9 @@ const Model = ({
             </button>
 
             <p className="text-black font-semibold">NAME</p>
+            {/* <p className="text-black font-semibold">
+              {modelName || "3D Model"}
+            </p> */}
 
             {/* App Tour Button */}
             <button
@@ -109,28 +112,44 @@ const Model = ({
                 setIsTourVisible(true);
                 setTourStep(0);
               }}
-              className="relative px-2 bg-white rounded-full border-2 border-gray-500 shadow-lg hover:bg-green-700"
+              className="relative px-2 bg-white rounded-full border-2 border-gray-500"
             >
               ?
             </button>
             {/* App Tour Popup */}
             {isTourVisible && (
-              <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm text-center">
-                  <p className="mb-4">{instructions[tourStep]}</p>
-                  <div className="flex justify-center">
-                    {/* <button
-                    onClick={() => setIsTourVisible(false)}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg"
-                  >
-                    Skip
-                  </button> */}
+              <div className="fixed inset-x-0 bottom-0 p-4 bg-black bg-opacity-50 flex items-end justify-center z-50 h-screen">
+                <div className="flex flex-col  gap-5 p-2 rounded-lg shadow-xl max-w-sm text-center">
+                  <div className="bg-gray-900 rounded-2xl px-6 py-4">
+                    <p className="text-white font-semibold">
+                      {instructions[tourStep]}
+                    </p>
+                  </div>
+                  <div className="flex justify-center gap-10">
+                    {tourStep > 0 ? (
+                      <button
+                        onClick={() => setTourStep(tourStep - 1)}
+                        className="px-4 py-2 rounded-full bg-blue-500 text-white border-2 border-white"
+                      >
+                        {"<"}
+                      </button>
+                    ) : (
+                      <button className="px-4 py-2 rounded-full bg-gray-500 text-white border-2 border-white">
+                        {"<"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsTourVisible(false)}
+                      className="px-4 py-2 bg-white text-blue-500 font-semibold border-2 border-blue-500  rounded-full"
+                    >
+                      EXIT TUTORIAL
+                    </button>
                     {tourStep < instructions.length - 1 ? (
                       <button
                         onClick={() => setTourStep(tourStep + 1)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                        className="px-4 rounded-full py-2 bg-blue-500 text-white border-2 border-white"
                       >
-                        Next
+                        {">"}
                       </button>
                     ) : (
                       <button
@@ -138,9 +157,9 @@ const Model = ({
                           setIsTourVisible(false);
                           setTourStep(0);
                         }}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                        className="px-4 py-2 bg-blue-500 text-white rounded-full border-2 border-white"
                       >
-                        Done
+                        {">"}
                       </button>
                     )}
                   </div>
