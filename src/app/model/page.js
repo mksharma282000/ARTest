@@ -107,6 +107,7 @@ export default function Home() {
           src={source}
           audioSrc={audioSource} // Pass audio URL to Model.js
           alt="A 3D model of an astronaut"
+          modelName={finalObject?.object_name}
           shadowIntensity={1.5}
           autoRotate={true}
           ar={true}
