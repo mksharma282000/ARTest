@@ -1,4 +1,4 @@
-"use client"; // <-- Add this at the top
+"use client";
 
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
