@@ -15,6 +15,7 @@ export default function Home() {
   const [finalObject, setFinalObject] = useState({});
   const [isload, loadModel] = useState(false);
   const [word, setWord] = useState("");
+  const [videoSource, setVideoSource] = useState(""); // New state for video
 
   const getModels = useCallback(async () => {
     try {
@@ -91,6 +92,14 @@ export default function Home() {
           console.log(audio);
         }
       });
+      // Video
+      finalObject.file_name.video.forEach(async (files) => {
+        if (files.endsWith(".mp4")) {
+          const video = await downloadFile(finalObject.object_name, files);
+          setVideoSource(video);
+          console.log(video);
+        }
+      });
     };
     processFiles();
   }, [finalObject]);
@@ -105,7 +114,8 @@ export default function Home() {
         <Model
           iosSrc={iosSource}
           src={source}
-          audioSrc={audioSource} // Pass audio URL to Model.js
+          audioSrc={audioSource} //Audio
+          videoSrc={videoSource} //Video
           alt="A 3D model of an astronaut"
           modelName={finalObject?.object_name}
           shadowIntensity={1.5}
