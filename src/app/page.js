@@ -22,8 +22,10 @@ export default function Home() {
   const [scannedText, setScannedText] = useState("");
   const [selected, setSelected] = useState("");
   const [word, setWord] = useState(""); // Define word state globally
+  const [showError, setShowError] = useState(false);
 
   const router = useRouter();
+
   const getModels = useCallback(async () => {
     try {
       const response = await fetch(
@@ -145,6 +147,8 @@ export default function Home() {
 
         if (!foundMatch) {
           console.warn("No match found for refined word:", refinedWord);
+          setShowError(true);
+          setTimeout(() => setShowError(false), 3000); // auto-dismiss in 3s
         }
       } else {
         console.error("Error from API:", data.error?.message);
@@ -155,7 +159,6 @@ export default function Home() {
   };
 
   const refineText = async (word) => {
-    // const GEMINI_API_KEY = "AIzaSyCi0SpePLAR5gLiwen8lyQAAiOqpZPbl4E";
     const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
     if (!GEMINI_API_KEY) {
@@ -351,20 +354,20 @@ export default function Home() {
       canvas.style.opacity = "0.2";
 
       setTimeout(() => {
-        canvas.style.transform = "scale(1.3)";
+        canvas.style.transform = "scale(0.8)";
         canvas.style.opacity = "1";
       }, 300);
 
       // Center and display the canvas
       canvas.style.position = "absolute";
       canvas.style.top = "50%";
-      canvas.style.left = "30%";
+      // canvas.style.left = "30%";
       canvas.style.transform = "translate(0%, 0%)"; // Fix for perfect centering
-      canvas.style.borderRadius = "20px";
+      canvas.style.borderRadius = "4px";
       canvas.style.boxShadow = "0 15px 30px rgba(0, 0, 0, 0.3)";
       canvas.style.background =
         "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)";
-      canvas.style.padding = "10px";
+      canvas.style.padding = "11px";
       canvas.style.zIndex = 100;
     }
   };
@@ -505,6 +508,17 @@ export default function Home() {
           <div className="absolute bottom-[-15px] right-[-1px] w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-3xl animate-scanner-bottom-right"></div>
         </div>
       </div>
+      {showError && (
+        <div
+          className="absolute top-8 z-10 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-md"
+          role="alert"
+        >
+          <strong className="font-bold">Oops!</strong>
+          <span className="block sm:inline ml-2">
+            The model for this word is not available. Please try again.
+          </span>
+        </div>
+      )}
 
       {/* Button Section */}
       <div className="absolute bottom-[15%] md:bottom-20 z-50 w-full flex justify-center">
