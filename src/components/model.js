@@ -125,18 +125,20 @@ const Model = ({
           ></model-viewer>
 
           {/* Zoom in/out slider */}
-          <div className="absolute left-2 z-50 top-[60%] flex flex-col-reverse align-center justify-center">
-            <input
-              type="range"
-              min="0.5" // Allow a smaller size
-              max="1" // Maintain a max zoom
-              step="0.05"
-              value={scale}
-              onChange={handleSliderChange}
-              className="w-24 h-48"
-              style={{ writingMode: "bt-lr", transform: "rotate(270deg)" }}
-            />
-          </div>
+          {!isTourVisible && (
+            <div className="absolute left-2 z-50 top-[60%] flex flex-col-reverse align-center justify-center">
+              <input
+                type="range"
+                min="0.5" // Allow a smaller size
+                max="1" // Maintain a max zoom
+                step="0.05"
+                value={scale}
+                onChange={handleSliderChange}
+                className="w-24 h-48"
+                style={{ writingMode: "bt-lr", transform: "rotate(270deg)" }}
+              />
+            </div>
+          )}
 
           {/* Scale Adjustment Buttons */}
           {/* <div className="absolute bottom-24 left-4 flex flex-col gap-2">
@@ -209,7 +211,7 @@ const Model = ({
           {!isTourVisible && (
             <button
               onClick={isAudioPlaying ? stopAudio : playAudio}
-              className="absolute bottom-[15%] right-4 p-3 bg-white text-black rounded-full shadow-lg hover:bg-gray-200 transition-all"
+              className="absolute bottom-[21%] right-4 p-3 bg-white text-black rounded-full shadow-lg hover:bg-gray-200 transition-all"
             >
               {isAudioPlaying ? <Pause size={24} /> : <Music size={24} />}
             </button>
@@ -217,7 +219,7 @@ const Model = ({
 
           {/* SEE IN YOUR ROOM Button */}
           {!isTourVisible && (
-            <div className="absolute bottom-[5%] w-full m-auto items-center justify-center flex">
+            <div className="absolute bottom-[11%] w-full m-auto items-center justify-center flex">
               <button
                 className="self-stretch min-w-16 px-2 py-2 bg-Background-Button-Primary-Default rounded-full outline outline-1 outline-offset-[-1px] outline-Stroke-White inline-flex justify-center items-center gap-4 overflow-hidden custom-ar-button bg-blue-500 relative space-x-2 shadow-md hover:bg-blue-700 focus:outline-none w-[90%]"
                 onClick={activateAR}
